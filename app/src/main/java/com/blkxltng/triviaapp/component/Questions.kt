@@ -78,10 +78,14 @@ fun QuestionDisplay(question: QuestionItem,
     val answerSelectedState = remember {
         mutableStateOf<Boolean>(false)
     }
+    val scoreState = remember {
+        mutableStateOf<Int>(0)
+    }
     val updateAnswer: (Int) -> Unit = remember(question) {
         {
             answerState.value = it
             correctAnswerState.value = choicesState[it] == question.answer
+            if (choicesState[it] == question.answer) scoreState.value += 2 else scoreState.value -= 1
             answerSelectedState.value = true
         }
     }
@@ -93,7 +97,7 @@ fun QuestionDisplay(question: QuestionItem,
         Column(modifier = Modifier.padding(12.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start) {
-            if (questionIndex.value >= 3) ShowProgress(score = questionIndex.value)
+            if (questionIndex.value >= 3) ShowProgress(score = scoreState.value, questionIndex.value)
             QuestionTracker(count = questionIndex.value, outOf = viewModel.getTotalQuestionCount() ?: 100)
             DrawDottedLine(pathEffect)
             Column() {
@@ -134,8 +138,7 @@ fun QuestionDisplay(question: QuestionItem,
                                 updateAnswer(index)
                         }, modifier = Modifier.padding(start = 16.dp),
                             colors = RadioButtonDefaults.colors(
-                                selectedColor = if (correctAnswerState.value == true
-                                                    && index == answerState.value) {
+                                disabledColor = if (question.answer == answerText) {
                                     Color.Green.copy(alpha = 0.2f)
                                 } else {
                                     Color.Red.copy(alpha = 0.2f)
@@ -209,10 +212,10 @@ fun DrawDottedLine(pathEffect: PathEffect) {
 
 @Preview
 @Composable
-fun ShowProgress(score: Int = 12) {
+fun ShowProgress(score: Int = 12, questionIndex: Int = 1) {
     val gradient = Brush.linearGradient(listOf(Color(0xFFF95075), Color(0xFFBE6BE5)))
     val progressFactor = remember(score) {
-        mutableStateOf(score * 0.005f)
+        mutableStateOf(questionIndex * 0.005f)
     }
     Row(modifier = Modifier
         .padding(3.dp)
